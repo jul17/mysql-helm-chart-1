@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mysql-helm-chart.fullname" . }}
+  namespace:  {{ include "mysql-helm-chart.namespace" . }}
+  labels:
+    {{- include "mysql-helm-chart.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "mysql-helm-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "mysql-helm-chart.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "mysql-helm-chart.serviceAccountName" . }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 3306
+              name: mysql-helm
+          livenessProbe:
+            exec:
+              command:
+                - ls
+                - /var/lib/mysql/lost+found
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: {{ .Values.mysqlAuth.pwd | quote }}
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-data
+        {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (include "mysql-helm-chart.fullname" .) }}
+        {{- else }}
+          emptyDir: {}
+        {{ end }}

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mysql-helm-chart.fullname" . }}
+  namespace:  {{ include "mysql-helm-chart.namespace" . }}
+  labels:
+    {{- include "mysql-helm-chart.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+  selector:
+    {{- include "mysql-helm-chart.selectorLabels" . | nindent 4 }}

@@ -1,0 +1,33 @@
+namespace: 
+  create: true
+  name: "helm-ns"
+
+replicaCount: 1
+
+image:
+  repository: mysql
+  pullPolicy: IfNotPresent
+  tag: "8.0"
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: "mysql-helm-custom-svc"
+
+podAnnotations: {app: "mysql-helm-app"}
+
+service:
+  type: ClusterIP
+  port: 3306
+
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 1Gi
+  className: longhorn-test
+
+mysqlAuth:
+  pwd: rancher
